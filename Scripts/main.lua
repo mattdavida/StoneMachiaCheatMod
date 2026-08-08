@@ -28,6 +28,7 @@ local defaultDamageMultiplier     = nil
 local defaultDamageBaseMultiplier = nil
 local moreManaActivated           = false
 local playerSessionLevel          = nil
+local manaHandle                  = nil
 local defaultMana                 = nil
 local defaultMaxMana              = nil
 local playerDefaultLevel          = nil
@@ -62,7 +63,6 @@ local function godPlayer(on)
     end
 end
 
-
 local function playerMaxMana(max_mana)
     local p = UEHelpers.GetPlayer()
     if p then
@@ -70,8 +70,23 @@ local function playerMaxMana(max_mana)
             defaultMana = p.mana
             defaultMaxMana = p['Max Mana']
         end
-        p['Max Mana'] = max_mana
-        p.mana = max_mana
+        if moreManaActivated then
+            if manaHandle then
+                CancelDelayedAction(manaHandle)
+                manaHandle = nil
+            end
+            manaHandle = LoopInGameThreadWithDelay(2000, function()
+                p.mana = max_mana
+                p['Max Mana'] = max_mana
+            end)
+        else
+            if manaHandle then
+                CancelDelayedAction(manaHandle)
+                manaHandle = nil
+                p.mana = defaultMana
+                p['Max Mana'] = defaultMaxMana
+            end
+        end
         print("Mana set to: " .. tostring(max_mana))
     end
 end
@@ -201,7 +216,7 @@ ModMenu.Register({
                 moreManaActivated = checked
                 if checked then
                     playerMaxMana(9999)
-                elseif defaultMaxMana then
+                else
                     playerMaxMana(defaultMaxMana)
                 end
             end,
@@ -288,7 +303,13 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function()
         ExecuteInGameThreadWithDelay(3000, function() jumps() end)
     end
     if moreManaActivated then
+        if manaHandle then
+            CancelDelayedAction(manaHandle)
+            manaHandle = nil
+        end
         ExecuteInGameThreadWithDelay(3000, function() playerMaxMana(9999) end)
+    else
+        ExecuteInGameThreadWithDelay(3000, function() playerMaxMana(defaultMaxMana) end)
     end
     if playerSessionLevel then
         ExecuteInGameThreadWithDelay(3000, function() setPlayerSessionLevel(playerSessionLevel) end)
