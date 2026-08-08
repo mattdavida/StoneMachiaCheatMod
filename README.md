@@ -1,5 +1,7 @@
 # Stonemachia Cheat Mod
 
+![Stonemachia Cheats](GithubAssets/StoneMachiaCheats.png)
+
 In-game cheat menu for Stonemachia. Press **F6** to toggle queen form, god mode, auto-parry, level, jumps, mana, and Topini spawns.
 
 **Requires [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS)** and the shared **[ModMenu](https://github.com/mattdavida/ue4ss-ModMenu)** runtime.
