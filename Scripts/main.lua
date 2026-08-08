@@ -1,30 +1,84 @@
+local ModMenu = require("ModMenu.ModMenu")
 local UEHelpers = require("UEHelpers.UEHelpers")
+
 print("--------------------------------")
-print("STONEMACHIA CHEAT MOD LOADED")
-print("Commands:")
-print("enable_cheats [true] - activate all cheats. Pass 'true' to skip queen (stay as pawn)")
-print("god_player  - DamageMultiplier=0. Persists through death")
-print("queen       - queen form, vulnerable (1-2 hits to die). Persists through death/checkpoints")
-print("queen_off   - revert to pawn form")
-print("parry_on_hit - auto-parry every hit in any form. Persists through death/checkpoints")
-print("parry_off   - deactivate parry on hit")
-print("more_mana   - set player mana to 9999")
-print("set_level <n> - set player level (session only - resets on game restart)")
-print("jumps <n>   - set jump count")
-print("spawn_topini <n> - spawn n rat minions")
-print("cheat_mod   - show this command list in the console at any time")
+print("StoneMachia Cheat Mod")
+print("Press F6 to open the cheat menu")
 print("--------------------------------")
 
-local queenActivated      = false
-local parryOnHitActivated = false
-local godPlayerActivated  = false
-local jumpsEnabled        = false
-local jumps               = 2
-local parryOnHitHandle    = nil
-local moreManaActivated   = false
-local playerSessionLevel  = nil
+ModMenu.Init({
+    title = "StoneMachia Cheats",
+    key = Key.F6,
+    keyHint = "F6",
+    dock = "right",
+    fontTitle = 22,
+    fontHint = 14,
+    fontItem = 16,
+    fontSection = 18,
+    fontDropdown = 16,
+})
 
-local function parryOnHitOn(Ar)
+local parryOnHitHandle            = nil
+local parryOnHitActivated         = false
+local queenActivated              = false
+local godPlayerActivated          = false
+local jumpsEnabled                = false
+local jumpsCount                  = 2
+local defaultDamageMultiplier     = nil
+local defaultDamageBaseMultiplier = nil
+local moreManaActivated           = false
+local playerSessionLevel          = nil
+local defaultMana                 = nil
+local defaultMaxMana              = nil
+local playerDefaultLevel          = nil
+
+
+local function setPlayerSessionLevel(level)
+    playerSessionLevel = level
+    local p = UEHelpers.GetPlayer()
+    if p then
+        local bpacStats = p.BPAC_PlayerStats
+        if bpacStats then
+            if not playerDefaultLevel then
+                playerDefaultLevel = bpacStats.PlayerLvl
+            end
+            bpacStats.PlayerLvl = level
+            bpacStats:SavePlayerStats()
+            print("Level set to: " .. tostring(level))
+        end
+    end
+end
+
+local function godPlayer(on)
+    local p = UEHelpers.GetPlayer()
+    if p then
+        if not defaultDamageMultiplier then
+            defaultDamageMultiplier = p.DamageMultiplier
+            defaultDamageBaseMultiplier = p.DamageBaseMultiplier
+        end
+        p.DamageMultiplier = on and 0 or defaultDamageMultiplier
+        p.DamageBaseMultiplier = on and 0 or defaultDamageBaseMultiplier
+        print("God player: " .. (on and "ON" or "OFF"))
+    end
+end
+
+
+local function playerMaxMana(max_mana)
+    local p = UEHelpers.GetPlayer()
+    if p then
+        if not defaultMana then
+            defaultMana = p.mana
+            defaultMaxMana = p['Max Mana']
+        end
+        p['Max Mana'] = max_mana
+        p.mana = max_mana
+        print("Mana set to: " .. tostring(max_mana))
+    end
+end
+
+
+
+local function parryOnHitOn()
     parryOnHitActivated = true
     if not parryOnHitHandle then
         parryOnHitHandle = LoopInGameThreadWithDelay(16, function()
@@ -35,10 +89,9 @@ local function parryOnHitOn(Ar)
         end)
     end
     print("Parry on hit: ON")
-    if Ar then Ar:Log("Parry on hit: ON") end
 end
 
-local function parryOnHitOff(Ar)
+local function parryOnHitOff()
     parryOnHitActivated = false
     if parryOnHitHandle then
         CancelDelayedAction(parryOnHitHandle)
@@ -47,170 +100,175 @@ local function parryOnHitOff(Ar)
     local p = UEHelpers.GetPlayer()
     if p and p:IsValid() then p['iframe+'] = false end
     print("Parry on hit: OFF")
-    if Ar then Ar:Log("Parry on hit: OFF") end
 end
 
-local function godPlayerOn(Ar)
-    godPlayerActivated = true
-    local p = UEHelpers.GetPlayer()
-    if p then
-        p.DamageMultiplier = 0
-        p.DamageBaseMultiplier = 0
-        print("God player: ON")
-        if Ar then Ar:Log("God player: ON") end
-    end
-end
-
-local function jumpsOn(Ar)
-    jumpsEnabled = true
-    local p = UEHelpers.GetPlayer()
-    if p then
-        p.JumpMaxCount = jumps
-        local msg = "Jumps set to: " .. tostring(p.JumpMaxCount)
-        print(msg)
-        if Ar then Ar:Log(msg) end
-    end
-end
-
-local function queenOn(Ar)
-    queenActivated = true
-    local p = UEHelpers.GetPlayer()
-    if p then
-        p['diventa regina No level']()
-        p.bCanBeDamaged = true
-        print("Queen: ON (1-2 hits to die)")
-        if Ar then Ar:Log("Queen: ON (1-2 hits to die)") end
-    end
-end
-
-local function playerMaxMana(max_mana, Ar)
-    moreManaActivated = true
-    local p = UEHelpers.GetPlayer()
-    if p then
-        p['Max Mana'] = max_mana
-        p.mana = max_mana
-        print("Mana set to: " .. tostring(max_mana))
-        if Ar then Ar:Log("Mana set to: " .. tostring(max_mana)) end
-    end
-end
-
-local function setPlayerSessionLevel(level, Ar)
-    playerSessionLevel = level
-    local p = UEHelpers.GetPlayer()
-    if p then
-        local bpacStats = p.BPAC_PlayerStats
-        if bpacStats then
-            bpacStats.PlayerLvl = level
-            bpacStats:SavePlayerStats()
-            print("Level set to: " .. tostring(level))
-            if Ar then Ar:Log("Level set to: " .. tostring(level)) end
-        end
-    end
-end
-
-local function spawnTopini(times_to_spawn, Ar)
+local function spawnTopini(times_to_spawn)
     local p = UEHelpers.GetPlayer()
     if p then
         for i = 1, times_to_spawn do
             p["spawn topini"]()
             print("Topini spawned: " .. tostring(i))
-            if Ar then Ar:Log("Topini spawned: " .. tostring(i)) end
         end
     end
 end
 
--- cheat mod help cmd
-RegisterConsoleCommandHandler("cheat_mod", function(FullCommand, Paramaters, Ar)
-    Ar:Log("Commands:")
-    Ar:Log("enable_cheats [true] - activate all cheats. Pass 'true' to skip queen (stay as pawn)")
-    Ar:Log("god_player  - DamageMultiplier=0. Persists through death")
-    Ar:Log("queen       - queen form, vulnerable (1-2 hits to die). Persists through death/checkpoints")
-    Ar:Log("queen_off   - revert to pawn form")
-    Ar:Log("parry_on_hit - auto-parry every hit in any form. Persists through death/checkpoints")
-    Ar:Log("parry_off   - deactivate parry on hit")
-    Ar:Log("more_mana   - set player mana to 9999")
-    Ar:Log("set_level <n> - set player level (session only - resets on game restart)")
-    Ar:Log("jumps <n>   - set jump count")
-    Ar:Log("spawn_topini <n> - spawn n rat minions")
-    Ar:Log("cheat_mod - show this help")
-    return true
-end)
-
-RegisterConsoleCommandHandler("god_player", function(FullCommand, Paramaters, Ar)
-    godPlayerOn(Ar)
-    return true
-end)
-
-RegisterConsoleCommandHandler("jumps", function(FullCommand, Paramaters, Ar)
-    jumpsEnabled = true
-    jumps = tonumber(Paramaters[1]) or 2
-    jumpsOn(Ar)
-    return true
-end)
-
-RegisterConsoleCommandHandler("set_level", function(FullCommand, Paramaters, Ar)
-    local level = tonumber(Paramaters[1])
-    if not level then
-        Ar:Log("Usage: set_level <number>")
-        return true
+local function queenOn()
+    local p = UEHelpers.GetPlayer()
+    if p then
+        p['diventa regina No level']()
+        p.bCanBeDamaged = true
+        print("Queen: ON (1-2 hits to die)")
     end
-    setPlayerSessionLevel(level, Ar)
-    return true
-end)
+end
 
-RegisterConsoleCommandHandler("queen", function(FullCommand, Paramaters, Ar)
-    queenOn(Ar)
-    return true
-end)
-
-RegisterConsoleCommandHandler("queen_off", function(FullCommand, Paramaters, Ar)
-    queenActivated = false
+local function queenOff()
     local p = UEHelpers.GetPlayer()
     if p then
         p["diventa pedone"]()
         p.bCanBeDamaged = true
         print("Queen: OFF")
-        if Ar then Ar:Log("Queen: OFF") end
     end
-    return true
-end)
+end
 
-RegisterConsoleCommandHandler("parry_on_hit", function(FullCommand, Paramaters, Ar)
-    parryOnHitOn(Ar)
-    return true
-end)
 
-RegisterConsoleCommandHandler("parry_off", function(FullCommand, Paramaters, Ar)
-    parryOnHitOff(Ar)
-    return true
-end)
-
-RegisterConsoleCommandHandler("spawn_topini", function(FullCommand, Paramaters, Ar)
-    local times_to_spawn = tonumber(Paramaters[1]) or 1
-    spawnTopini(times_to_spawn, Ar)
-    return true
-end)
-
--- more player mana cmd
-RegisterConsoleCommandHandler("more_mana", function(FullCommand, Paramaters, Ar)
-    playerMaxMana(9999, Ar)
-    return true
-end)
-
--- enable all cheats
-RegisterConsoleCommandHandler("enable_cheats", function(FullCommand, Paramaters, Ar)
-    local skip_queen = Paramaters[1] == "true"
-    if not skip_queen then
-        queenOn(Ar)
+local function jumps()
+    local p = UEHelpers.GetPlayer()
+    if p then
+        p.JumpMaxCount = jumpsEnabled and jumpsCount or 1
+        local msg = "Jumps set to: " .. tostring(p.JumpMaxCount)
+        print(msg)
     end
-    parryOnHitOn(Ar)
-    godPlayerOn(Ar)
-    jumpsOn(Ar)
-    spawnTopini(2, Ar)
-    playerMaxMana(9999, Ar)
-    if Ar then Ar:Log("All cheats enabled") end
-    return true
-end)
+end
+
+ModMenu.Register({
+    id = "Cheats",
+    title = "Cheats",
+    items = {
+        -- jump checkbox
+        {
+            type = "checkbox",
+            id = "jumps",
+            label = "Jumps",
+            default = false,
+            onChange = function(checked)
+                jumpsEnabled = checked
+                jumps()
+            end,
+        },
+        {
+            type = "checkbox",
+            id = "godPlayer",
+            label = "God Player",
+            default = false,
+            onChange = function(checked)
+                godPlayerActivated = checked
+                godPlayer(checked)
+            end,
+        },
+        {
+            type = "checkbox",
+            id = "parryOnHit",
+            label = "Parry on hit",
+            default = false,
+            onChange = function(checked)
+                if checked then
+                    parryOnHitOn()
+                else
+                    parryOnHitOff()
+                end
+            end,
+        },
+        {
+            type = "checkbox",
+            id = "queen",
+            label = "Queen",
+            default = false,
+            onChange = function(checked)
+                queenActivated = checked
+                if checked then
+                    queenOn()
+                else
+                    queenOff()
+                end
+            end,
+        },
+        {
+            type = "checkbox",
+            id = "moreMana",
+            label = "More Mana",
+            default = false,
+            onChange = function(checked)
+                moreManaActivated = checked
+                if checked then
+                    playerMaxMana(9999)
+                elseif defaultMaxMana then
+                    playerMaxMana(defaultMaxMana)
+                end
+            end,
+        },
+        {
+            type = "button",
+            id = "spawnTopini",
+            label = "Spawn Topini",
+            onClick = function()
+                spawnTopini(1)
+            end,
+        },
+        {
+            type = "dropdown",
+            id = "playerLevel",
+            label = "Player Level",
+            options = {
+                { label = "Default", value = playerDefaultLevel or 0 },
+                { label = "10",      value = 10 },
+                { label = "20",      value = 20 },
+                { label = "30",      value = 30 },
+                { label = "40",      value = 40 },
+                { label = "50",      value = 50 },
+                { label = "60",      value = 60 },
+                { label = "70",      value = 70 },
+                { label = "80",      value = 80 },
+                { label = "90",      value = 90 },
+                { label = "100",     value = 100 },
+                { label = "999",     value = 999 },
+                { label = "9999",    value = 9999 },
+                { label = "99999",   value = 99999 },
+                { label = "MAX",     value = 999999 },
+            },
+            default = playerDefaultLevel or 0,
+            onChange = function(value)
+                local level = tonumber(value)
+                if level then
+                    setPlayerSessionLevel(level)
+                end
+            end,
+        },
+        {
+            type = "dropdown",
+            id = "jumpCount",
+            label = "Jump Count - Only works if Jumps is enabled",
+            options = {
+                { label = "2",   value = 2 },
+                { label = "4",   value = 4 },
+                { label = "8",   value = 8 },
+                { label = "16",  value = 16 },
+                { label = "32",  value = 32 },
+                { label = "64",  value = 64 },
+                { label = "999", value = 999 },
+            },
+            default = 2,
+            onChange = function(value)
+                local n = tonumber(value)
+                if not n then return end
+                jumpsCount = n
+                if jumpsEnabled then
+                    jumps()
+                end
+            end,
+        },
+    },
+})
+
 
 RegisterHook("/Script/Engine.PlayerController:ClientRestart", function()
     if queenActivated then
@@ -224,10 +282,10 @@ RegisterHook("/Script/Engine.PlayerController:ClientRestart", function()
         ExecuteInGameThreadWithDelay(3000, function() parryOnHitOn() end)
     end
     if godPlayerActivated then
-        ExecuteInGameThreadWithDelay(3000, function() godPlayerOn() end)
+        ExecuteInGameThreadWithDelay(3000, function() godPlayer(true) end)
     end
     if jumpsEnabled then
-        ExecuteInGameThreadWithDelay(3000, function() jumpsOn() end)
+        ExecuteInGameThreadWithDelay(3000, function() jumps() end)
     end
     if moreManaActivated then
         ExecuteInGameThreadWithDelay(3000, function() playerMaxMana(9999) end)

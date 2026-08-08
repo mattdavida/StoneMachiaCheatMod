@@ -1,58 +1,47 @@
 # Stonemachia Cheat Mod
 
-A cheat mod for Stonemachia. Adds console commands for queen transformation, persistent god mode, auto-parry, level setting, extra jumps, and rat minion spawning.
+In-game cheat menu for Stonemachia. Press **F6** to toggle queen form, god mode, auto-parry, level, jumps, mana, and Topini spawns.
 
-**Requires [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS).**
+**Requires [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS)** and the shared **ModMenu** runtime.
 
 ## Installation
 
-Extract the mod folder into your UE4SS Mods directory:
+Extract so both folders land under your UE4SS Mods directory:
 
 ```
-<Stonemachia install>\Stonemachia\Binaries\Win64\ue4ss\Mods\
+<Stonemachia install>\Stonemachia\Binaries\Win64\ue4ss\Mods\StoneMachiaCheatMod\
+<Stonemachia install>\Stonemachia\Binaries\Win64\ue4ss\Mods\shared\ModMenu\
 ```
 
-The mod includes an `enabled.txt` file so it activates automatically — no edits to `mods.txt` required.
+`StoneMachiaCheatMod` ships with `enabled.txt` — no `mods.txt` edit needed.
 
-Launch the game. The mod is active immediately.
+Launch the game → press **F6**.
 
-## Console Commands
+## Menu
 
-Open the UE4SS console (default: tilde / F10) and type any of the following.
+| Control | What it does |
+|---------|----------------|
+| **Jumps** | Enable extra jumps (see Jump Count). |
+| **God Player** | No damage in pawn form. Toggle off restores prior multipliers. |
+| **Parry on hit** | Auto-parry every hit; works in any form. Persists through death/checkpoints. |
+| **Queen** | Queen form (still killable). Toggle off = pawn. Persists through death/checkpoints. |
+| **More Mana** | Mana/max mana → 9999. Toggle off restores prior values. |
+| **Spawn Topini** | Spawn one rat minion (click again for more). |
+| **Player Level** | Preset levels (Default / 10–100 / 999 / 9999 / MAX…). Session-persistent through death. |
+| **Jump Count** | Jump amount; only applies while Jumps is ON. |
 
-| Command | Description |
-|---------|-------------|
-| `cheat_mod` | Print the full command list to the UE4SS console at any time. Useful if you forget a command name mid-session. |
-| `enable_cheats [true]` | One command to activate everything: queen form, auto-parry, god player mode, double jump, max mana, and 2 Topini rat minions. All persistent modes carry through death and checkpoints. Pass `true` to skip the queen transformation and stay as a pawn with all other cheats still active: `enable_cheats true` |
-| `set_level <number>` | Set the player's level to the given value. Scales **all** stats at once: health, mana, and every piece's base and special attack damage (Pawn, Knight, Bishop, Rook). Persists through death within the session but resets when the game is restarted. Example: `set_level 9999` |
-| `queen` | Transform into the Queen chess piece. Gives you the Queen's moveset and extended-range attacks, but you can still be killed (1–2 hits). Persists through death and checkpoints automatically. |
-| `queen_off` | Revert to Pawn (base) form. |
-| `parry_on_hit` | Activate auto-parry mode. Every incoming hit is treated as a successful parry, triggering full parry rewards (orbs, reactions) on each strike. Works in any form — Pawn or Queen. Persists through death and checkpoints. |
-| `parry_off` | Deactivate auto-parry mode. |
-| `more_mana` | Set the player's current mana and max mana to 9999. Persists through death. |
-| `god_player` | Set `DamageMultiplier` and `DamageBaseMultiplier` to 0 on the pawn, making the player take no damage in pawn form. Persists through death. |
-| `jumps <number>` | Set the maximum number of jumps the player can perform before landing. Example: `jumps 5` |
-| `spawn_topini <number>` | Spawn the given number of Topini rat minions to follow you around. Example: `spawn_topini 3` |
-
-## Combining Commands
-
-Commands are independent and can be stacked freely. Use `enable_cheats` to activate all of them at once, or pick and choose:
+## Useful combos
 
 | Combo | Effect |
 |-------|--------|
-| `queen` + `parry_on_hit` | Queen moveset, auto-parries every hit, never dies. Parry orbs and reactions fire on every incoming attack. |
-| `set_level 9999` + `queen` | Max-damage queen that can still be killed — great for a power fantasy run that retains some risk. |
-| `queen` + `jumps 10` | Airborne queen chaos. |
-| `enable_cheats true` | Full pawn invincibility with parry rewards on every hit. Stays in base form — useful if you want the pawn moveset with no risk. |
+| Queen + Parry on hit | Queen kit, auto-parry every hit |
+| God Player + Parry on hit | Invincible pawn with parry rewards |
+| Level 9999 + Queen | High-damage queen that can still die if Parry is off |
+| Jumps + high Jump Count + Queen | Airborne queen |
 
 ## Notes
 
-- **`set_level` is the most powerful command.** At level 9999, base health reaches ~88,000 and pawn base damage reaches ~7,200. All values scale from this single stat through the game's own calculation system. The level persists through death within a session but resets when the game is restarted.
-
-- **`queen`, `parry_on_hit`, `god_player`, `more_mana`, and `jumps`** all re-activate automatically after death (3 s delay to allow the pawn to fully spawn). `queen` and `parry_on_hit` also re-activate after leaving a checkpoint rest area (2 s delay).
-
-- **`god_player`** uses the pawn's `DamageMultiplier`. It does not affect the Queen's separate damage pipeline — use `parry_on_hit` instead when in queen form.
-
-- **`spawn_topini`** can be called multiple times. Each call adds more minions.
-
-- All modes persist for the duration of the session. Reload the mod or restart the game to reset all states.
+- Toggles re-apply after death (~3 s). Queen and Parry also re-apply after leaving a checkpoint (~3 s).
+- God Player does not cover queen damage — use Parry on hit in queen form.
+- Level is session-based (survives death, not a full game restart).
+- No console commands; the menu is the only interface.
